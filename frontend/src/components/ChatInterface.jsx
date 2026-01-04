@@ -8,6 +8,7 @@ import './ChatInterface.css';
 export default function ChatInterface({
   conversation,
   onSendMessage,
+  onRegenerate,
   isLoading,
 }) {
   const [input, setInput] = useState('');
@@ -104,6 +105,13 @@ export default function ChatInterface({
                     </div>
                   )}
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
+
+                  {/* Regenerate button - show only on the last assistant message */}
+                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && (
+                    <button className="regenerate-button" onClick={onRegenerate}>
+                      Regenerate
+                    </button>
+                  )}
                 </div>
               )}
             </div>

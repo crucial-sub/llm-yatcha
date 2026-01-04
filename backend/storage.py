@@ -170,3 +170,53 @@ def update_conversation_title(conversation_id: str, title: str):
 
     conversation["title"] = title
     save_conversation(conversation)
+
+
+def remove_last_assistant_message(conversation_id: str) -> bool:
+    """
+    Remove the last assistant message from a conversation.
+
+    Args:
+        conversation_id: Conversation identifier
+
+    Returns:
+        True if message was removed, False if no assistant message found
+    """
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        raise ValueError(f"Conversation {conversation_id} not found")
+
+    messages = conversation["messages"]
+    if not messages:
+        return False
+
+    # Find and remove the last assistant message
+    for i in range(len(messages) - 1, -1, -1):
+        if messages[i]["role"] == "assistant":
+            messages.pop(i)
+            save_conversation(conversation)
+            return True
+
+    return False
+
+
+def get_last_user_message(conversation_id: str) -> Optional[str]:
+    """
+    Get the last user message from a conversation.
+
+    Args:
+        conversation_id: Conversation identifier
+
+    Returns:
+        The last user message content, or None if not found
+    """
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        return None
+
+    messages = conversation["messages"]
+    for i in range(len(messages) - 1, -1, -1):
+        if messages[i]["role"] == "user":
+            return messages[i]["content"]
+
+    return None

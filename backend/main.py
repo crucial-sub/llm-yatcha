@@ -194,6 +194,68 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
     )
 
 
+@app.post("/api/conversations/{conversation_id}/regenerate/stream")
+async def regenerate_message_stream(conversation_id: str):
+    """
+    Regenerate the last assistant response.
+    Removes the last assistant message and re-runs the council process.
+    """
+    # Check if conversation exists
+    conversation = storage.get_conversation(conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Get the last user message before removing assistant message
+    last_user_message = storage.get_last_user_message(conversation_id)
+    if not last_user_message:
+        raise HTTPException(status_code=400, detail="No user message to regenerate response for")
+
+    # Remove the last assistant message
+    storage.remove_last_assistant_message(conversation_id)
+
+    async def event_generator():
+        try:
+            # Stage 1: Collect responses
+            yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
+            stage1_results = await stage1_collect_responses(last_user_message)
+            yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
+
+            # Stage 2: Collect rankings
+            yield f"data: {json.dumps({'type': 'stage2_start'})}\n\n"
+            stage2_results, label_to_model = await stage2_collect_rankings(last_user_message, stage1_results)
+            aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
+            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings}})}\n\n"
+
+            # Stage 3: Synthesize final answer
+            yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
+            stage3_result = await stage3_synthesize_final(last_user_message, stage1_results, stage2_results)
+            yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
+
+            # Save complete assistant message
+            storage.add_assistant_message(
+                conversation_id,
+                stage1_results,
+                stage2_results,
+                stage3_result
+            )
+
+            # Send completion event
+            yield f"data: {json.dumps({'type': 'complete'})}\n\n"
+
+        except Exception as e:
+            # Send error event
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)

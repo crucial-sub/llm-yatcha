@@ -181,6 +181,126 @@ function App() {
     }
   };
 
+  const handleRegenerate = async () => {
+    if (!currentConversationId || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      // Remove the last assistant message from UI
+      setCurrentConversation((prev) => {
+        const messages = [...prev.messages];
+        // Find and remove the last assistant message
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].role === 'assistant') {
+            messages.splice(i, 1);
+            break;
+          }
+        }
+        return { ...prev, messages };
+      });
+
+      // Create a new partial assistant message
+      const assistantMessage = {
+        role: 'assistant',
+        stage1: null,
+        stage2: null,
+        stage3: null,
+        metadata: null,
+        loading: {
+          stage1: false,
+          stage2: false,
+          stage3: false,
+        },
+      };
+
+      // Add the partial assistant message
+      setCurrentConversation((prev) => ({
+        ...prev,
+        messages: [...prev.messages, assistantMessage],
+      }));
+
+      // Regenerate with streaming
+      await api.regenerateStream(currentConversationId, (eventType, event) => {
+        switch (eventType) {
+          case 'stage1_start':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              lastMsg.loading.stage1 = true;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage1_complete':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              lastMsg.stage1 = event.data;
+              lastMsg.loading.stage1 = false;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage2_start':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              lastMsg.loading.stage2 = true;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage2_complete':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              lastMsg.stage2 = event.data;
+              lastMsg.metadata = event.metadata;
+              lastMsg.loading.stage2 = false;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage3_start':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              lastMsg.loading.stage3 = true;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage3_complete':
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              lastMsg.stage3 = event.data;
+              lastMsg.loading.stage3 = false;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'complete':
+            setIsLoading(false);
+            break;
+
+          case 'error':
+            console.error('Regenerate error:', event.message);
+            setIsLoading(false);
+            break;
+
+          default:
+            console.log('Unknown event type:', eventType);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to regenerate:', error);
+      // Reload conversation to get correct state
+      loadConversation(currentConversationId);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="app">
       <Sidebar
@@ -192,6 +312,7 @@ function App() {
       <ChatInterface
         conversation={currentConversation}
         onSendMessage={handleSendMessage}
+        onRegenerate={handleRegenerate}
         isLoading={isLoading}
       />
     </div>
