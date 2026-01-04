@@ -1,8 +1,8 @@
 """3-stage LLM Council orchestration."""
 
 from typing import List, Dict, Any, Tuple
-from .openrouter import query_models_parallel, query_model
-from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from .llm_client import query_models_parallel, query_model
+from .config import COUNCIL_MODELS, CHAIRMAN_MODEL, TITLE_GENERATION_MODEL
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
@@ -267,6 +267,7 @@ async def generate_conversation_title(user_query: str) -> str:
     """
     title_prompt = f"""Generate a very short title (3-5 words maximum) that summarizes the following question.
 The title should be concise and descriptive. Do not use quotes or punctuation in the title.
+If the question is in Korean, generate a Korean title.
 
 Question: {user_query}
 
@@ -274,8 +275,8 @@ Title:"""
 
     messages = [{"role": "user", "content": title_prompt}]
 
-    # Use gemini-2.5-flash for title generation (fast and cheap)
-    response = await query_model("google/gemini-2.5-flash", messages, timeout=30.0)
+    # Use configured model for title generation (fast and cheap)
+    response = await query_model(TITLE_GENERATION_MODEL, messages, timeout=30.0)
 
     if response is None:
         # Fallback to a generic title
