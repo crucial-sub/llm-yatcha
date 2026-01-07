@@ -14,6 +14,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 XAI_API_KEY = os.getenv("XAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Debug: verify API keys loaded correctly at startup
 print(f"[Config] ANTHROPIC_API_KEY loaded: {ANTHROPIC_API_KEY[:15] + '...' + ANTHROPIC_API_KEY[-4:] if ANTHROPIC_API_KEY and len(ANTHROPIC_API_KEY) > 19 else 'NOT SET'}")
@@ -28,6 +29,7 @@ _MODEL_DEFINITIONS = [
     ("google/gemini-2.0-flash", GOOGLE_API_KEY),
     ("anthropic/claude-sonnet-4-5", ANTHROPIC_API_KEY),
     ("x-ai/grok-4", XAI_API_KEY),
+    ("groq/llama-3.3-70b-versatile", GROQ_API_KEY),
 ]
 
 # Auto-filter: only include models with configured API keys
@@ -78,6 +80,10 @@ PROVIDER_SETTINGS = {
     },
     "xai": {
         "base_url": "https://api.x.ai/v1",
+        "timeout": 120.0,
+    },
+    "groq": {
+        "base_url": "https://api.groq.com/openai/v1",
         "timeout": 120.0,
     },
 }

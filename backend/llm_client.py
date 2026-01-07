@@ -3,7 +3,7 @@
 import asyncio
 import httpx
 from typing import List, Dict, Any, Optional
-from .config import OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, XAI_API_KEY
+from .config import OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, XAI_API_KEY, GROQ_API_KEY
 
 
 async def _query_openai(
@@ -217,6 +217,53 @@ async def _query_xai(
         return None
 
 
+async def _query_groq(
+    model: str,
+    messages: List[Dict[str, str]],
+    timeout: float = 120.0
+) -> Optional[Dict[str, Any]]:
+    """
+    Query Groq API - OpenAI compatible.
+
+    Args:
+        model: Model name (without provider prefix)
+        messages: List of message dicts with 'role' and 'content'
+        timeout: Request timeout in seconds
+
+    Returns:
+        Response dict with 'content', or None if failed
+    """
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": model,
+        "messages": messages,
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            message = data['choices'][0]['message']
+
+            return {
+                'content': message.get('content'),
+            }
+
+    except Exception as e:
+        print(f"Error querying Groq model {model}: {e}")
+        return None
+
+
 async def query_model(
     model: str,
     messages: List[Dict[str, str]],
@@ -255,6 +302,8 @@ async def query_model(
         return await _query_google(model_name, messages, timeout)
     elif provider == 'xai':
         return await _query_xai(model_name, messages, timeout)
+    elif provider == 'groq':
+        return await _query_groq(model_name, messages, timeout)
     else:
         print(f"Unknown provider: {provider}")
         return None
