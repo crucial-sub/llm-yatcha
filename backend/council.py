@@ -73,7 +73,9 @@ Your task:
 1. First, evaluate each response individually. For each response, explain what it does well and what it does poorly.
 2. Then, at the very end of your response, provide a final ranking.
 
-IMPORTANT: Your final ranking MUST be formatted EXACTLY as follows:
+IMPORTANT:
+- Respond in the same language as the user's question above.
+- Your final ranking MUST be formatted EXACTLY as follows:
 - Start with the line "FINAL RANKING:" (all caps, with colon)
 - Then list the responses from best to worst as a numbered list
 - Each line should be: number, period, space, then ONLY the response label (e.g., "1. Response A")
@@ -153,6 +155,8 @@ Your task as Chairman is to synthesize all of this information into a single, co
 - The individual responses and their insights
 - The peer rankings and what they reveal about response quality
 - Any patterns of agreement or disagreement
+
+IMPORTANT: Respond in the same language as the user's original question.
 
 Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
 
