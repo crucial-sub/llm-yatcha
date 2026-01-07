@@ -265,7 +265,7 @@ async def generate_conversation_title(user_query: str) -> str:
     Returns:
         A short title (3-6 words)
     """
-    # 개선된 프롬프트: 더 명확한 규칙과 구체적인 제목 생성 유도
+    # Improved prompt: clearer rules for more specific title generation
     title_prompt = f"""Create a very short title (3-6 words) for this conversation.
 
 Question: {user_query}

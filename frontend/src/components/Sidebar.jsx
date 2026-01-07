@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -8,25 +9,26 @@ export default function Sidebar({
   onNewConversation,
   onDeleteConversation,
 }) {
-  // 현재 열린 메뉴의 대화 ID
+  const { theme, toggleTheme } = useTheme();
+  // Currently open menu's conversation ID
   const [openMenuId, setOpenMenuId] = useState(null);
-  // 삭제 확인 모달에 표시할 대화 ID
+  // Conversation ID to show in delete confirmation modal
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-  // 메뉴 버튼 클릭 핸들러
+  // Menu button click handler
   const handleMenuClick = (e, convId) => {
     e.stopPropagation();
     setOpenMenuId(openMenuId === convId ? null : convId);
   };
 
-  // 삭제 버튼 클릭 핸들러
+  // Delete button click handler
   const handleDeleteClick = (e, convId) => {
     e.stopPropagation();
     setOpenMenuId(null);
     setDeleteConfirmId(convId);
   };
 
-  // 삭제 확인 핸들러
+  // Confirm delete handler
   const handleConfirmDelete = () => {
     if (deleteConfirmId) {
       onDeleteConversation(deleteConfirmId);
@@ -34,12 +36,12 @@ export default function Sidebar({
     }
   };
 
-  // 삭제 취소 핸들러
+  // Cancel delete handler
   const handleCancelDelete = () => {
     setDeleteConfirmId(null);
   };
 
-  // 외부 클릭 시 메뉴 닫기
+  // Close menu on outside click
   const handleConversationClick = (convId) => {
     setOpenMenuId(null);
     onSelectConversation(convId);
@@ -48,7 +50,16 @@ export default function Sidebar({
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1>LLM Council</h1>
+        <div className="sidebar-title-row">
+          <h1>LLM Council</h1>
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+        </div>
         <button className="new-conversation-btn" onClick={onNewConversation}>
           + New Conversation
         </button>
@@ -75,7 +86,7 @@ export default function Sidebar({
                 </div>
               </div>
 
-              {/* 메뉴 버튼 (⋮) */}
+              {/* Menu button (⋮) */}
               <button
                 className="menu-button"
                 onClick={(e) => handleMenuClick(e, conv.id)}
@@ -83,7 +94,7 @@ export default function Sidebar({
                 ⋮
               </button>
 
-              {/* 드롭다운 메뉴 */}
+              {/* Dropdown menu */}
               {openMenuId === conv.id && (
                 <div className="dropdown-menu">
                   <button
@@ -99,7 +110,7 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* 삭제 확인 모달 */}
+      {/* Delete confirmation modal */}
       {deleteConfirmId && (
         <div className="modal-overlay" onClick={handleCancelDelete}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>

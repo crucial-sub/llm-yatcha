@@ -60,9 +60,9 @@ function App() {
   const handleDeleteConversation = async (id) => {
     try {
       await api.deleteConversation(id);
-      // 대화 목록에서 삭제된 대화 제거
+      // Remove deleted conversation from the list
       setConversations((prev) => prev.filter((conv) => conv.id !== id));
-      // 현재 선택된 대화가 삭제된 경우 선택 해제
+      // Clear selection if the deleted conversation was selected
       if (currentConversationId === id) {
         setCurrentConversationId(null);
         setCurrentConversation(null);
