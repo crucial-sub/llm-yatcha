@@ -263,13 +263,18 @@ async def generate_conversation_title(user_query: str) -> str:
         user_query: The first user message
 
     Returns:
-        A short title (3-5 words)
+        A short title (3-6 words)
     """
-    title_prompt = f"""Generate a very short title (3-5 words maximum) that summarizes the following question.
-The title should be concise and descriptive. Do not use quotes or punctuation in the title.
-If the question is in Korean, generate a Korean title.
+    # 개선된 프롬프트: 더 명확한 규칙과 구체적인 제목 생성 유도
+    title_prompt = f"""Create a very short title (3-6 words) for this conversation.
 
 Question: {user_query}
+
+Rules:
+- No quotes, no punctuation at the end
+- Be specific about the topic
+- Use Korean if the question is in Korean
+- Output ONLY the title, nothing else
 
 Title:"""
 
