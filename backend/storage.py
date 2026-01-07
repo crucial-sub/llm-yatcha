@@ -220,3 +220,20 @@ def get_last_user_message(conversation_id: str) -> Optional[str]:
             return messages[i]["content"]
 
     return None
+
+
+def delete_conversation(conversation_id: str) -> bool:
+    """
+    Delete a conversation from storage.
+
+    Args:
+        conversation_id: Conversation identifier
+
+    Returns:
+        True if deleted successfully, False if not found
+    """
+    path = get_conversation_path(conversation_id)
+    if not os.path.exists(path):
+        return False
+    os.remove(path)
+    return True

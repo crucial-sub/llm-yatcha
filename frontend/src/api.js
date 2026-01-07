@@ -114,6 +114,22 @@ export const api = {
   },
 
   /**
+   * Delete a conversation.
+   * @param {string} conversationId - The conversation ID
+   * @returns {Promise<Object>}
+   */
+  async deleteConversation(conversationId) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}`,
+      { method: 'DELETE' }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to delete conversation');
+    }
+    return response.json();
+  },
+
+  /**
    * Regenerate the last assistant response with streaming updates.
    * @param {string} conversationId - The conversation ID
    * @param {function} onEvent - Callback function for each event: (eventType, data) => void
